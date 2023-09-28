@@ -3,22 +3,9 @@
 NodeJS Bot for drrr.com
 
 ```
-Usage: node main.js [OPTION]... [LambdaScript]...
+# Run demo script
 
-OPTION:
-
--h, --help                       Show the manual
-
--i, --interact, --repl           Enable repl mode
-
-
-
-$ # Run it interatively
-$ node main.js
-
-$ # Run the script
-$ node main.js script/werewolf.js
-
+node script/demo.mjs
 ```
 ## Avatar
 ![Avatar](avatar.jpg)
