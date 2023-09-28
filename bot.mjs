@@ -427,7 +427,7 @@ class Bot {
         let room = json;
         if(room && room.talks){
           let talks = room.talks.filter(
-            talk => !self.lastTalk || talk.time > self.lastTalk.time)
+            talk => !self.lastTalk || talk.time > self.lastTalk.time).slice(-3)
           talks.forEach(talk => self.handleUser(talk));
           talks.forEach(talk => self.handle(talk));
           if(talks.length)
