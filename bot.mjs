@@ -1,12 +1,10 @@
 import * as fs from 'fs';
 import * as https from 'https';
 import * as querystring from 'querystring';
-import * as RL from './run-lambda.mjs'
 
 // const fs = require('fs');
 // const https = require('https');
 // const querystring = require('querystring');
-// const LS = require('./LambdaScript')
 
 https.globalAgent.keepAlive = true;
 
@@ -97,9 +95,6 @@ class Bot {
   }
 
   constructor(...args){
-
-    let machine = args.find(v => typeof v === 'object');
-    args = args.filter(v => typeof v !== 'object');
     let [name, avatar, lang, agent, config] = args;
     this.name = name;
     this.avatar = avatar;
@@ -110,11 +105,6 @@ class Bot {
     this.exec_ctrl = false;
     this.ctrl_queue = [];
     this.visitors = {}
-
-    if(machine) {
-      console.log("start listening...")
-      script_listen(this, machine);
-    }
   }
 
   data(p){
@@ -359,7 +349,7 @@ class Bot {
 
     let e = talk2event(talk, this);
     (this.events[e.type] || []).forEach(
-      f => f(e.user, e.text, e.url, e.trip, e))
+      f => f(e.user, e.text, e.trip, e.url, e))
 
     if(this.listen)
       this.listen(e)
@@ -596,32 +586,4 @@ function match_user(name, trip, nameTripRegex){
     return name.match(new RegExp(nameRegex, 'i'));
 }
 
-function script_listen(user, machine){
-  function event_action(event, config, req){
-
-    // machine = LS.Main.getMain(machine);
-    let rules = machine.events[""] || []
-
-    if(machine.cur.length)
-      rules = rules.concat(machine.events[machine.cur] || [])
-
-    rules.map(([type, action])=> {
-      if((Array.isArray(type) && type.includes(event)) || type == event){
-        action(req.user, req.text, req.trip, req.url, req);
-      }
-    });
-    // rules.map(([type, user_trip_regex, cont_regex, action])=> {
-    //   if((Array.isArray(type) && type.includes(event)) || type == event){
-    //     if(match_user(req.user, req.trip, user_trip_regex)){
-    //       if((req.text === 'unknown' || req.text === undefined)
-    //         || req.text.match(new RegExp(cont_regex))){
-    //         action(req.user, req.text, req.url, req.trip, req);
-    //       }
-    //     }
-    //   }
-    // });
-  }
-  user.listen = e => event_action(e.type, null, e);
-}
-
-export { Bot as Bot, script_listen as listen };
+export { Bot as Bot};
