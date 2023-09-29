@@ -1,0 +1,16 @@
+# profile
+name = test#mytc123
+avatar = setton
+roomID = EE0Lwl33Iu
+
+lang = en-US
+agent = Bot
+
+# cookies saves
+saves = saves.json
+
+# waiting time for sending messages
+sendInterval = 1800
+
+# waiting time for getting messages
+getInterval = 300

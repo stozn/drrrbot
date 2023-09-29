@@ -2,16 +2,49 @@ import * as fs from 'fs';
 import * as https from 'https';
 import * as querystring from 'querystring';
 
-// const fs = require('fs');
-// const https = require('https');
-// const querystring = require('querystring');
-
-const sendInterval = 1500; // interval time for sending messages
-const getInterval = 5000; // interval time for data retrieval
-
 https.globalAgent.keepAlive = true;
+global.print = console.log.bind(console);
+global.drrr = null;
 
 const endpoint = "https://drrr.com";
+
+const defaultConfig = {
+  name: 'test',
+  avatar: 'setton',
+  lang: 'en-US',
+  agent: 'Bot',
+  saves: 'saves.json',
+  roomID: 'UgaX0cBVAT',
+  sendInterval: 1800,
+  getInterval: 300,
+}
+
+function getConfig(path='config.txt') {
+  let config = JSON.parse(JSON.stringify(defaultConfig));
+  try {
+    const data = fs.readFileSync(path, 'utf8');
+    const lines = data.split('\n');
+    lines.forEach(line => {
+      line = line.trim();
+      if (line === '' || line.startsWith('#')) return;
+      const parts = line.split('=');
+      const key = parts[0].trim();
+      const values = parts[1].trim();
+      if (!config.hasOwnProperty(key)) 
+        console.error(`Unknown config key: ${key}`);
+      else if (values.length === 0) 
+        console.error(`No values for config key: ${key}`);
+      else
+        config[key] = values;
+    });
+    console.log(config);
+    return config;
+  } catch (err) {
+    console.error('Failed to read ' + path + ': ' + err.message);
+    return defaultConfig;
+  }
+}
+
 
 function fetch(url, [opts, body], callback){
   url = new URL(url);
@@ -97,57 +130,31 @@ class Bot {
     if(func) this[func](...args);
   }
 
-  constructor(...args){
-    let [name, avatar, lang, agent, config] = args;
+  constructor(name, avatar, lang, agent, saves, sendInterval, getInterval){
     this.name = name;
-    this.avatar = avatar;
-    this.cookie = null;
+    this.avatar = avatar || 'setton';
     this.lang = lang || 'en-US';
     this.agent = agent || 'Bot';
-    this.config = config || "config.json";
+    this.saves = saves || "saves.json";
+    this.sendInterval = sendInterval || 1800;
+    this.getInterval = getInterval || 300;
+    this.cookie = null;
     this.exec_ctrl = false;
     this.ctrl_queue = [];
     this.visitors = {}
   }
 
-  data(p){
-    if(!p) return {
-      name: this.name,
-      avatar: this.avatar,
-      cookie: this.cookie
-    };
-    else Object.keys(p).forEach(k => {
-      this[k] = p[k];
-    });
-  }
-
   save(){
-    let json = readJson(this.config);
-    json['bot'] = this.data();
-    writeJson(this.config, json);
+    let json = readJson(this.saves);
+    json[this.name] = this.cookie;
+    writeJson(this.saves, json);
   }
 
   load(){
-    let json = readJson(this.config);
-    let p = json['bot'] || false;
+    let json = readJson(this.saves);
+    let p = json[this.name] || false;
     if(!p) return false;
-    this.data(p);
-    return true;
-  }
-
-  saveDB(){
-    let json = readJson(this.config);
-    json['bots'] = json['bots'] || {};
-    json['bots'][this.cookie] = [this.name, this.avatar, this.cookie];
-    writeJson(this.config, json);
-  }
-
-  loadDB(index){
-    index = index || 0;
-    let json = readJson(this.config);
-    let recs = Object.keys(json['bots'] || {});
-    if(recs.length <= index) return false;
-    [this.name, this.avatar, this.cookie] = recs[index];
+    this.cookie = p;
     return true;
   }
 
@@ -424,32 +431,33 @@ class Bot {
     let self = this;
     let handle_count = 0;
     let handle = () => {
-      if(handle_count){
-        console.log("handle_count: " + handle_count);
+      if(handle_count) 
         return;
-      } 
+
       handle_count += 1;
       this.update(json => {
         let room = json;
         if(room && room.talks){
-          let talks = room.talks.filter(
+          let talks = room.talks.sort((a, b) => a.time - b.time).slice(-3).filter(
             talk => !self.lastTalk || talk.time > self.lastTalk.time)
           talks.forEach(talk => self.handleUser(talk));
           talks.forEach(talk => self.handle(talk));
-          
+
           if(talks.length)
             self.lastTalk = talks[talks.length - 1];
+          print(talks)
         }
         handle_count -= 1;
       });
     }
     if(!this.loopID)
-      this.loopID = setInterval(handle, getInterval);
+      this.loopID = setInterval(handle, this.getInterval);
     handle();
   }
 
   do_ctrl(){
     let self = this;
+    let sendInterval = this.sendInterval;
     function _do_ctrl(){
       if(self.ctrl_queue.length){
         self.ctrl_queue.shift()(); // may use promise instead
@@ -593,4 +601,19 @@ function match_user(name, trip, nameTripRegex){
     return name.match(new RegExp(nameRegex, 'i'));
 }
 
-export { Bot as Bot};
+console.log("bot.mjs loaded");
+
+function start(cb=()=>drrr.print("/mehi")){
+  let config = getConfig();
+  drrr = new Bot(config.name, config.avatar, config.lang, config.agent, config.saves,
+                 parseInt(config.sendInterval), parseInt(config.getInterval));
+  if (drrr.load()){
+      drrr.join(config.roomID, cb);
+  }else {
+      drrr.login(() => {
+          drrr.save();
+          drrr.join(config.roomID, cb);
+      })
+  } 
+}
+export { Bot as Bot, start as start};

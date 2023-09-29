@@ -1,26 +1,29 @@
-import { Bot } from '../bot.mjs'
-global.print = console.log.bind(console);
+import { start } from '../bot.mjs'
 
-let room = "EN6BcFXeqP"
+let main = () => {
 
-let drrr = new Bot("test", "kanra")
-
-
-if (drrr.load()){
-    print("load success")
-    drrr.join(room, () => werewolf("zh"))
-}else {
-    drrr.login(() => {
-        print("login success")
-        drrr.save()
-        drrr.join(room, () => werewolf("zh"))
-    })
-} 
-
-
-let werewolf = (lang)=>{
-    print("werewolf")
+    print("start main")
     drrr.print("/me 程序启动")
-  
-    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {print(cont)})
+
+    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {
+        print(cont)
+        if (cont == "/"){
+            for(let i = 0; i < 3; i++){
+                drrr.print(i)
+            }
+        }
+    })
+
+    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {
+        print(cont)
+        print(user)
+        if (cont == "/1"){
+            for(let i = 0; i < 3; i++){
+                drrr.dm(user, i)
+            }
+        }
+    })
+
 }
+
+start(main)
