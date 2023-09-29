@@ -1,2 +1,7 @@
 run.bat
 config.json
+
+__pycache__/
+.credentials/
+.vscode/
+.venv/
