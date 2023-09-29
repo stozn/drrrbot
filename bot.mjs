@@ -6,6 +6,9 @@ import * as querystring from 'querystring';
 // const https = require('https');
 // const querystring = require('querystring');
 
+const sendInterval = 1500; // interval time for sending messages
+const getInterval = 5000; // interval time for data retrieval
+
 https.globalAgent.keepAlive = true;
 
 const endpoint = "https://drrr.com";
@@ -430,6 +433,7 @@ class Bot {
             talk => !self.lastTalk || talk.time > self.lastTalk.time).slice(-3)
           talks.forEach(talk => self.handleUser(talk));
           talks.forEach(talk => self.handle(talk));
+          console.log(room.talks.sort((a, b) => a['time'] - b['time']).slice(-3));
           if(talks.length)
             self.lastTalk = talks[talks.length - 1];
         }
@@ -437,7 +441,7 @@ class Bot {
       });
     }
     if(!this.loopID)
-      this.loopID = setInterval(handle, 5000);
+      this.loopID = setInterval(handle, getInterval);
     handle();
   }
 
@@ -450,7 +454,7 @@ class Bot {
           if(self.ctrl_queue.length)
             _do_ctrl();
           else self.exec_ctrl = false;
-        }, 1500);
+        }, sendInterval);
       }
     }
     if(!self.exec_ctrl){ self.exec_ctrl = true; _do_ctrl(); }
