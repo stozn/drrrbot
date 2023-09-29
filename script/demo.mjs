@@ -1,26 +1,31 @@
 import { start } from '../bot.mjs'
 
-let main = () => {
-
-    print("start main")
-    drrr.print("/me 程序启动")
-
-    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {
-        if (cont == "/"){
-            for(let i = 0; i < 3; i++){
-                drrr.print(i)
-            }
-        }
-    })
-
-    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {
-        if (cont == "/1"){
-            for(let i = 0; i < 3; i++){
-                drrr.dm(user, i)
-            }
-        }
-    })
-
-}
-
+// start the this script
 start(main)
+
+// main function
+function main(){
+    print("start main") // console.log is bound to print.
+    drrr.print("/me hello world")
+
+    drrr.event(['msg', 'me', 'dm'] ,(user, cont) => {
+        if (cont == "/msg"){
+            drrr.print(`@${user} msg ok`)
+            drrr.print(`/me@${user} me ok`)
+        }
+    })
+
+    drrr.event('msg' ,(user, cont) => {
+        if (cont == "/dm"){
+            drrr.dm(user, `@${user} dm ok`)
+        }
+    })
+
+    drrr.event('join' ,user => {
+        drrr.print(`@${user} welcome`)
+    })
+
+    /*
+        you can write your script here.
+    */
+}

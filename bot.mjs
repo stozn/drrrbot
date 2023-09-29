@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as https from 'https';
 import * as querystring from 'querystring';
+import * as path from 'path'
 
 https.globalAgent.keepAlive = true;
 global.print = console.log.bind(console);
@@ -53,12 +54,13 @@ function saveLogs(data, dir='logs'){
   const day = String(today.getDate()).padStart(2, '0');
   const name = `${year}-${month}-${day}.txt`;
 
-  fs.appendFile(path.join(dir + date), data, (err) => {
+  fs.mkdir(dir, { recursive: true }, (err) => {
     if (err) 
-      console.error('追加写入文件时出错：', err);
-    else
-      console.log('追加写入成功！');
-  });
+      console.error('Failed to create directory:', err);
+    else 
+      fs.appendFile(path.join(dir, name), data, (err) => {
+        if (err) console.error('Failed to append write file:', err)});
+  });  
 }
 
 function time(){
@@ -131,11 +133,22 @@ function talk2event(talk, bot){
     text: talk.content || talk.message || "",
     url: talk.url || ""
   };
-  if(talk.type === 'message')
+  if(talk.type === 'message'){
     evt.type = talk.to ? (talk.from.name == bot.name ? 'dmto': 'dm') : 'msg';
-  else{
+    if(evt.type == 'dmto'){
+      console.log(evt);
+      evt.text = '[dm to]' + talk.text;
+    }else if(evt.type == 'dm'){
+      console.log(evt);
+      evt.text = '[dm me]' + talk.text;
+    }
+  }else{
     evt.type = talk.type;
     switch (evt.type) {
+      case 'me':
+        break;
+      case 'user-profile':
+        break;  
       case 'join':
         evt.text = '[join]';
         break;
@@ -145,17 +158,16 @@ function talk2event(talk, bot){
       case 'music':
         evt.text = '[music] ' + talk.music.name;
         break;
-      case 'leave':
-        evt.text = '离开房间';
-        break;
       default:
-        evt.text = '未知操作：' + talk.type;
+        evt.text = '[unknown] ' + talk.type;
         break;
     }
   } 
-  let log = `${time()}  @${evt.user}[${evt.tc}]\t | ${evt.text}`
-  console.log(log);
-  saveLogs(log);
+  if(evt.type!='user-profile'){
+    let log = `${time()}  @${evt.user} [${evt.tc}] | ${evt.text}`
+    console.log(log);
+    saveLogs(log + '\n');
+  }
   return evt;
 }
 
@@ -570,9 +582,11 @@ class Bot {
     this._prev_say_args = ['sendTo', arguments];
     let users = this.room.users || []
     let u = users.find(x => x.name === name)
-    let cmd = {'message': msg, 'to': u.id };
-    if(url) cmd.url = url;
-    this.room_api(cmd, callback);
+    if(!u){
+      let cmd = {'message': msg, 'to': u.id };
+      if(url) cmd.url = url;
+      this.room_api(cmd, callback);
+    }else console.error('Can not find the user:' + name + ' while sending drirect message:' + msg);
   }
 
   music(name, url, callback){ this.room_api({'music': 'music', 'name': name, 'url': url}, callback); }
