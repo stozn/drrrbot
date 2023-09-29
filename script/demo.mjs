@@ -1,7 +1,7 @@
 import { Bot } from '../bot.mjs'
 global.print = console.log.bind(console);
 
-let room = "oRVMt2rKrN"
+let room = "EN6BcFXeqP"
 
 let drrr = new Bot("test", "kanra")
 

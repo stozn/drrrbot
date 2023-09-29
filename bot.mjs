@@ -424,16 +424,19 @@ class Bot {
     let self = this;
     let handle_count = 0;
     let handle = () => {
-      if(handle_count) return;
+      if(handle_count){
+        console.log("handle_count: " + handle_count);
+        return;
+      } 
       handle_count += 1;
       this.update(json => {
         let room = json;
         if(room && room.talks){
           let talks = room.talks.filter(
-            talk => !self.lastTalk || talk.time > self.lastTalk.time).slice(-3)
+            talk => !self.lastTalk || talk.time > self.lastTalk.time)
           talks.forEach(talk => self.handleUser(talk));
           talks.forEach(talk => self.handle(talk));
-          console.log(room.talks.sort((a, b) => a['time'] - b['time']).slice(-3));
+          
           if(talks.length)
             self.lastTalk = talks[talks.length - 1];
         }
