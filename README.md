@@ -1,7 +1,7 @@
 # DrrrBot
 
 A nodejs bot for drrr.com
-This project is modified from the [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot)..
+This project is modified from the [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot).
 
 Changes made:
 * Removed support for `Lambda Script` (as there seem to be some bugs with `event`).
