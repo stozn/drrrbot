@@ -10,6 +10,7 @@ const endpoint = "https://drrr.com";
 
 const defaultConfig = {
   name: 'test',
+  tc: '',
   avatar: 'setton',
   lang: 'en-US',
   agent: 'Bot',
@@ -130,14 +131,18 @@ class Bot {
     if(func) this[func](...args);
   }
 
-  constructor(name, avatar, lang, agent, saves, sendInterval, getInterval){
+  constructor(name, tc, avatar, roomID, lang, agent, saves, sendInterval, getInterval, cb){
     this.name = name;
+    this.tc = tc || '';
+    this.name_tc = name + (tc ? '#' + tc : '');
     this.avatar = avatar || 'setton';
+    this.roomID = roomID || null;
     this.lang = lang || 'en-US';
     this.agent = agent || 'Bot';
     this.saves = saves || "saves.json";
     this.sendInterval = sendInterval || 1800;
     this.getInterval = getInterval || 300;
+    this.cb = cb;
     this.cookie = null;
     this.exec_ctrl = false;
     this.ctrl_queue = [];
@@ -153,7 +158,10 @@ class Bot {
   load(){
     let json = readJson(this.saves);
     let p = json[this.name] || false;
-    if(!p) return false;
+    if(!p){
+      console.warn('can not find "' + this.name + '" in cookie file:' + this.saves);
+      return false;
+    } 
     this.cookie = p;
     return true;
   }
@@ -201,10 +209,13 @@ class Bot {
 
     get_login_token(this, (token, cookie) => {
 
-      if(!cookie) return callback && callback(token);
+      if(!cookie){
+        console.error('get cookie error' + res);
+        process.exit(0);
+      }
 
       let form = {
-        'name' : this.name,
+        'name' : this.name_tc,
         'login' : 'ENTER',
         'token' : token,
         'language' : this.lang,
@@ -214,15 +225,15 @@ class Bot {
       this.cookie = cookie;
 
       this.post(endpoint + "/?api=json", form, res => {
-        if(res.status == 200){
+        if(res.status == 200 && ready){
           this.cookie = getCookie(res);
-          if(ready)
-            this.getReady(() => callback && callback(res));
-          else callback(res);
+          console.log('login in success');
+          callback && callback(token);
         }
         else{
-          callback && callback(res);
-        }
+          console.error('login in error' + res);
+          process.exit(0);
+        } 
       });
     });
   }
@@ -242,14 +253,27 @@ class Bot {
     this.get(endpoint + "/room?api=json", res => {
       // can set user and profile
       let json = JSON.parse(res.text);
-      this.loc = json.room ? 'room' : 'lounge';
-      this.room = json.room || false;
-      this.users =
-        (this.room && this.room.users) || false;
-      this.users && this.users.forEach(u => {
-        this.visitors[u.name] = u;
-      })
-      callback && callback(json);
+      if(json.redirect){
+        console.warn('The username is already taken in the room');
+        process.exit(0);
+      }else{
+        this.loc = json.room ? 'room' : 'lounge';
+        this.room = json.room || false;
+        if(!this.room){
+          console.error('Not in the room');
+          process.exit(0);
+        }else if(this.room.roomId != this.roomID){
+          console.warn('The bot is already in another room: ' + this.room.roomId);
+          this.leave(() => this.join(this.roomID));
+        }else{
+          this.users =
+            (this.room && this.room.users) || false;
+          this.users && this.users.forEach(u => {
+            this.visitors[u.name] = u;
+          })
+        } 
+        callback && callback(json);
+        }   
     });
   }
 
@@ -410,10 +434,12 @@ class Bot {
   }
 
   join(id, callback){
+    this.roomID = id;
     this.get(endpoint + "/room/?id=" + id + "&api=json", res => {
       let json = JSON.parse(res.text)
       this.getReady(() => callback && callback(json));
       this.startHandle();
+      console.log("join room")
     });
   }
 
@@ -434,9 +460,10 @@ class Bot {
         handle_count -= 1;
       });
     }
-    if(!this.loopID)
+    if(!this.loopID){
       this.loopID = setInterval(handle, this.getInterval);
-    handle();
+      handle();
+    }
   }
 
   do_ctrl(){
@@ -589,12 +616,14 @@ console.log("bot.mjs loaded");
 
 function start(cb=()=>drrr.print("/mehi")){
   let config = getConfig();
-  drrr = new Bot(config.name, config.avatar, config.lang, config.agent, config.saves,
-                 parseInt(config.sendInterval), parseInt(config.getInterval));
+  drrr = new Bot(config.name, config.tc, config.avatar, config.roomID, config.lang, config.agent, config.saves,
+                 parseInt(config.sendInterval), parseInt(config.getInterval), cb);
   if (drrr.load()){
+      console.log('loading saves...');
       drrr.join(config.roomID, cb);
   }else {
       drrr.login(() => {
+          console.log('login...');
           drrr.save();
           drrr.join(config.roomID, cb);
       })

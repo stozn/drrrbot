@@ -1,7 +1,8 @@
 # profile
-name = test#mytc123
+name = test
+tc = mytc123
 avatar = setton
-roomID = EE0Lwl33Iu
+roomID = UgaX0cBVAT
 
 lang = en-US
 agent = Bot
