@@ -46,6 +46,29 @@ function getConfig(path='config.txt') {
   }
 }
 
+function saveLogs(data, dir='logs'){
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const name = `${year}-${month}-${day}.txt`;
+
+  fs.appendFile(path.join(dir + date), data, (err) => {
+    if (err) 
+      console.error('追加写入文件时出错：', err);
+    else
+      console.log('追加写入成功！');
+  });
+}
+
+function time(){
+  const today = new Date();
+  const hours = String(today.getHours()).padStart(2, '0');
+  const minutes = String(today.getMinutes()).padStart(2, '0');
+  const seconds = String(today.getSeconds()).padStart(2, '0');
+  const currentTime = `${hours}:${minutes}:${seconds}`;
+  return currentTime;
+}
 
 function fetch(url, [opts, body], callback){
   url = new URL(url);
@@ -102,15 +125,37 @@ function talk2event(talk, bot){
     type: "",
     user: (talk.from && talk.from.name)
           || (talk.user && talk.user.name) ||  "",
-    trip: (talk.from && talk.from.tripcode)
-          || (talk.user && talk.user.tripcode) || "",
+    tc: (talk.from && talk.from.tripcode)
+          || (talk.user && talk.user.tripcode) || "无",
     from: (talk.from || talk.user || false),
     text: talk.content || talk.message || "",
     url: talk.url || ""
   };
   if(talk.type === 'message')
     evt.type = talk.to ? (talk.from.name == bot.name ? 'dmto': 'dm') : 'msg';
-  else evt.type = talk.type;
+  else{
+    evt.type = talk.type;
+    switch (evt.type) {
+      case 'join':
+        evt.text = '[join]';
+        break;
+      case 'leave':
+        evt.text = '[leave]';
+        break;
+      case 'music':
+        evt.text = '[music] ' + talk.music.name;
+        break;
+      case 'leave':
+        evt.text = '离开房间';
+        break;
+      default:
+        evt.text = '未知操作：' + talk.type;
+        break;
+    }
+  } 
+  let log = `${time()}  @${evt.user}[${evt.tc}]\t | ${evt.text}`
+  console.log(log);
+  saveLogs(log);
   return evt;
 }
 
@@ -273,6 +318,7 @@ class Bot {
           })
         } 
         callback && callback(json);
+        setInterval(()=> this.dm(this.name, 'keep'), 4*60*1000);
         }   
     });
   }
@@ -373,7 +419,7 @@ class Bot {
 
     let e = talk2event(talk, this);
     (this.events[e.type] || []).forEach(
-      f => f(e.user, e.text, e.trip, e.url, e))
+      f => f(e.user, e.text, e.tc, e.url, e))
 
     if(this.listen)
       this.listen(e)
@@ -602,12 +648,12 @@ function name_trip_split(expr){
   return [e[0], e.length > 1 ? e[e.length - 1] : undefined];
 }
 
-function match_user(name, trip, nameTripRegex){
+function match_user(name, tc, nameTripRegex){
   let [nameRegex, tripRegex] = name_trip_split(nameTripRegex);
   if(name === undefined) name = "";
-  if(trip === undefined) trip = "";
+  if(tc === undefined) tc = "";
   if(nameTripRegex.includes('#'))
-    return name.match(new RegExp(nameRegex, 'i')) && (trip && trip.match(new RegExp(tripRegex, 'i')));
+    return name.match(new RegExp(nameRegex, 'i')) && (tc && tc.match(new RegExp(tripRegex, 'i')));
   else
     return name.match(new RegExp(nameRegex, 'i'));
 }
