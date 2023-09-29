@@ -128,7 +128,7 @@ function talk2event(talk, bot){
     user: (talk.from && talk.from.name)
           || (talk.user && talk.user.name) ||  "",
     tc: (talk.from && talk.from.tripcode)
-          || (talk.user && talk.user.tripcode) || "无",
+          || (talk.user && talk.user.tripcode) || "None",
     from: (talk.from || talk.user || false),
     text: talk.content || talk.message || "",
     url: talk.url || ""
@@ -581,12 +581,12 @@ class Bot {
   sendTo(name, msg, url, callback){
     this._prev_say_args = ['sendTo', arguments];
     let users = this.room.users || []
-    let u = users.find(x => x.name === name)
-    if(!u){
-      let cmd = {'message': msg, 'to': u.id };
+    let u = users.find(x => x.name === name);
+    if(u){
+      let cmd = {'message': msg, 'to': u.id || 'None'};
       if(url) cmd.url = url;
       this.room_api(cmd, callback);
-    }else console.error('Can not find the user:' + name + ' while sending drirect message:' + msg);
+    }else console.error('Can not find the user: @' + name + ' while sending drirect message: ' + msg);
   }
 
   music(name, url, callback){ this.room_api({'music': 'music', 'name': name, 'url': url}, callback); }
