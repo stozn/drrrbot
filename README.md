@@ -3,6 +3,7 @@
 English | [简体中文](README_zh-CN.md)
 
 A Node.js bot for drrr.com
+
 This project is modified from the [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot). (Thanks to @nobodyzxc aka lambda.catノ)
 
 Changes made:

@@ -3,6 +3,7 @@
 [English](README.md) | 简体中文
 
 一个用于 drrr.com 的Node.js机器人
+
 该项目是基于 [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot) 进行修改的。（感谢浪打大佬 @nobodyzxc）
 
 所做的修改：
