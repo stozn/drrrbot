@@ -392,10 +392,9 @@ class Bot {
   }
 
   update(callback){
-    let self = this;
     let url = "/json.php";
-    let updateTime = Date.now()/1000;
-    if(this.history) url += `?update=${updateTime}`;
+    this.updateTime = this.updateTime || '';
+    if(this.history) url += `?update=${this.updateTime}`;
     this.get(endpoint + url, res => {
       let json = false;
       try { json = JSON.parse(res.text); }
@@ -403,6 +402,7 @@ class Bot {
       if(json && json.users){
         this.room = json;
         this.users = json.users;
+        this.updateTime = json.update;
       }
       callback && callback(json);
       this.history = json;
@@ -502,16 +502,19 @@ class Bot {
   startHandle(){
     let self = this;
     let handle_count = 0;
+    self.lastTalk = self.lastTalk || null;
     let handle = () => {
-      if(handle_count) 
-        return;
-
+      if(handle_count) return;
       handle_count += 1;
       this.update(json => {
         let room = json;
         if(room && room.talks){
-          room.talks.forEach(talk => self.handleUser(talk));
-          room.talks.forEach(talk => self.handle(talk));
+          let talks = room.talks.filter(
+            talk => !self.lastTalk || talk.time > self.lastTalk.time)
+          talks.forEach(talk => self.handleUser(talk));
+          talks.forEach(talk => self.handle(talk));
+          if(talks.length)
+            self.lastTalk = talks[talks.length - 1];
         }
         handle_count -= 1;
       });

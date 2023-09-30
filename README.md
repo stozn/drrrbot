@@ -41,7 +41,7 @@ saves = saves.json
 sendInterval = 1800
 
 # waiting time for getting messages
-getInterval = 3000
+getInterval = 300
 ```
 * Tripcode(`tc`) is optional. (You can just delete that line to login without tc)
 * `RoomID` can be found in the URL of the room. (e.g. https://drrr.com/room/UgaX0cBVAT)
