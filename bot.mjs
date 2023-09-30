@@ -18,7 +18,7 @@ const defaultConfig = {
   saves: 'saves.json',
   roomID: 'UgaX0cBVAT',
   sendInterval: 1800,
-  getInterval: 300,
+  getInterval: 3000,
 }
 
 function getConfig(path='config.txt') {
@@ -136,11 +136,9 @@ function talk2event(talk, bot){
   if(talk.type === 'message'){
     evt.type = talk.to ? (talk.from.name == bot.name ? 'dmto': 'dm') : 'msg';
     if(evt.type == 'dmto'){
-      console.log(evt);
-      evt.text = '[dm to]' + talk.text;
+      evt.text = '[dm to] ' + evt.text;
     }else if(evt.type == 'dm'){
-      console.log(evt);
-      evt.text = '[dm me]' + talk.text;
+      evt.text = '[dm me] ' + evt.text;
     }
   }else{
     evt.type = talk.type;
@@ -198,7 +196,7 @@ class Bot {
     this.agent = agent || 'Bot';
     this.saves = saves || "saves.json";
     this.sendInterval = sendInterval || 1800;
-    this.getInterval = getInterval || 300;
+    this.getInterval = getInterval || 3000;
     this.cb = cb;
     this.cookie = null;
     this.exec_ctrl = false;

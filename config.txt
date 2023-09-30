@@ -14,4 +14,4 @@ saves = saves.json
 sendInterval = 1800
 
 # waiting time for getting messages
-getInterval = 300
+getInterval = 3000
