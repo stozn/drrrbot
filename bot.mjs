@@ -21,20 +21,18 @@ const defaultConfig = {
   getInterval: 3000,
 }
 
-function getConfig(configPath='config.txt') {
+function getConfig(configPath = 'config.txt') {
   let config = JSON.parse(JSON.stringify(defaultConfig));
-  fs.access(configPath, fs.constants.F_OK, (err) => {
-    if (err) {
+
+  try {
+    if (!fs.existsSync(configPath)) {
       console.error(`The file "${configPath}" does not exist.`);
       let data = '';
       Object.keys(defaultConfig).forEach((key) => {
         data += `${key} = ${defaultConfig[key]}\n`;
       });
-      fs.writeFile(configPath, data, (err) => {
-        if (err) console.error(`Can not create file "${configPath}"`, err);
-        else console.log(`"${configPath}" created:`);
-      });
-      return defaultConfig;
+      fs.writeFileSync(configPath, data);
+      console.log(`"${configPath}" created:`);
     } else {
       const data = fs.readFileSync(configPath, 'utf8');
       const lines = data.split('\n');
@@ -44,16 +42,18 @@ function getConfig(configPath='config.txt') {
         const parts = line.split('=');
         const key = parts[0].trim();
         const values = parts[1].trim();
-        if (!config.hasOwnProperty(key)) 
+        if (!config.hasOwnProperty(key))
           console.error(`Unknown config key: ${key}`);
-        else if (values.length === 0) 
+        else if (values.length === 0)
           console.error(`No values for config key: ${key}`);
         else
           config[key] = values;
       });
       console.log(`"${configPath}" loaded:`);
     }
-  });
+  } catch (err) {
+    console.error(`Error reading or writing file "${configPath}"`, err);
+  }
   console.log(config);
   return config;
 }
@@ -225,7 +225,7 @@ class Bot {
     let json = readJson(this.saves);
     let p = json[this.name] || false;
     if(!p){
-      console.warn('can not find "' + this.name + '" in cookie file:' + this.saves);
+      console.warn('can not find "' + this.name + '" in cookie file: ' + this.saves);
       return false;
     } 
     this.cookie = p;
@@ -278,7 +278,7 @@ class Bot {
         console.error('get cookie error');
         process.exit(0);
       }
-      
+
       let form = {
         'name' : this.name_tc,
         'login' : 'ENTER',
