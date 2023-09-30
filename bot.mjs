@@ -11,7 +11,7 @@ const endpoint = "https://drrr.com";
 
 const defaultConfig = {
   name: 'test',
-  tc: '',
+  tc: 'None',
   avatar: 'setton',
   lang: 'en-US',
   agent: 'Bot',
@@ -39,10 +39,11 @@ function getConfig(path='config.txt') {
       else
         config[key] = values;
     });
+    console.log('config.txt loaded:');
     console.log(config);
     return config;
   } catch (err) {
-    console.error('Failed to read ' + path + ': ' + err.message);
+    console.error('Failed to read `' + path + '` :' + err.message);
     return defaultConfig;
   }
 }
@@ -56,10 +57,10 @@ function saveLogs(data, dir='logs'){
 
   fs.mkdir(dir, { recursive: true }, (err) => {
     if (err) 
-      console.error('Failed to create directory:', err);
+      console.error('Failed to create directory `'+ dir + '` :' + err.message);
     else 
       fs.appendFile(path.join(dir, name), data, (err) => {
-        if (err) console.error('Failed to append write file:', err)});
+        if (err) console.error('Failed to append write file `'+ path.join(dir, name) + '` :' + err.message)});
   });  
 }
 
@@ -188,8 +189,8 @@ class Bot {
 
   constructor(name, tc, avatar, roomID, lang, agent, saves, sendInterval, getInterval, cb){
     this.name = name;
-    this.tc = tc || '';
-    this.name_tc = name + (tc ? '#' + tc : '');
+    this.tc = tc || 'None';
+    this.name_tc = name + (tc == 'None' ? '' : '#' + tc);
     this.avatar = avatar || 'setton';
     this.roomID = roomID || null;
     this.lang = lang || 'en-US';
@@ -263,12 +264,11 @@ class Bot {
     }
 
     get_login_token(this, (token, cookie) => {
-
       if(!cookie){
-        console.error('get cookie error' + res);
+        console.error('get cookie error');
         process.exit(0);
       }
-
+      console.log(this.name_tc);
       let form = {
         'name' : this.name_tc,
         'login' : 'ENTER',
@@ -282,11 +282,11 @@ class Bot {
       this.post(endpoint + "/?api=json", form, res => {
         if(res.status == 200 && ready){
           this.cookie = getCookie(res);
-          console.log('login in success');
+          console.log('login success');
           callback && callback(token);
         }
         else{
-          console.error('login in error' + res);
+          console.error('login error: ' + JSON.parse(res.text).error);
           process.exit(0);
         } 
       });
@@ -309,7 +309,7 @@ class Bot {
       // can set user and profile
       let json = JSON.parse(res.text);
       if(json.redirect){
-        console.warn('The username is already taken in the room');
+        console.warn('Same username exists in the room, please change your username');
         process.exit(0);
       }else{
         this.loc = json.room ? 'room' : 'lounge';
@@ -584,7 +584,7 @@ class Bot {
     let users = this.room.users || []
     let u = users.find(x => x.name === name);
     if(u){
-      let cmd = {'message': msg, 'to': u.id || 'None'};
+      let cmd = {'message': msg, 'to': u.id || ''};
       if(url) cmd.url = url;
       this.room_api(cmd, callback);
     }else console.error('Can not find the user: @' + name + ' while sending drirect message: ' + msg);
@@ -680,12 +680,13 @@ function start(cb=()=>drrr.print("/mehi")){
   drrr = new Bot(config.name, config.tc, config.avatar, config.roomID, config.lang, config.agent, config.saves,
                  parseInt(config.sendInterval), parseInt(config.getInterval), cb);
   if (drrr.load()){
-      console.log('loading saves...');
+      console.log('saved cookies loaded');
       drrr.join(config.roomID, cb);
   }else {
       drrr.login(() => {
           console.log('login...');
           drrr.save();
+          console.log('cookies saved');
           drrr.join(config.roomID, cb);
       })
   } 
