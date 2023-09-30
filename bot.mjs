@@ -18,7 +18,7 @@ const defaultConfig = {
   saves: 'saves.json',
   roomID: 'UgaX0cBVAT',
   sendInterval: 1800,
-  getInterval: 3000,
+  getInterval: 300,
 }
 
 function getConfig(configPath = 'config.txt') {
