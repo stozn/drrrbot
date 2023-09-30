@@ -4,7 +4,7 @@ English | [简体中文](README_zh-CN.md)
 
 A Node.js bot for drrr.com
 
-This project is modified from the [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot). (Thanks to @nobodyzxc aka lambda.catノ)
+This project is modified from the [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot). (Thanks to [@nobodyzxc](https://github.com/nobodyzxc) aka lambda.catノ)
 
 Changes made:
 * Removed support for `Lambda Script` (as there seem to be some bugs with `event`).

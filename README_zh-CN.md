@@ -4,7 +4,7 @@
 
 一个用于 drrr.com 的Node.js机器人
 
-该项目是基于 [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot) 进行修改的。（感谢浪打大佬 @nobodyzxc）
+该项目是基于 [DrrrChatbots/drrr-lambot](https://github.com/DrrrChatbots/drrr-lambot) 进行修改的。（感谢浪打大佬 [@nobodyzxc](https://github.com/nobodyzxc)）
 
 所做的修改：
 * 删除对`浪语`的支持（因为`event`好像有些问题）。
