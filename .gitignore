@@ -1,5 +1,5 @@
 run.bat
-config.json
+saves.json
 
 __pycache__/
 # Logs
@@ -132,4 +132,3 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-saves.json
