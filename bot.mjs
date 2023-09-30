@@ -21,31 +21,41 @@ const defaultConfig = {
   getInterval: 3000,
 }
 
-function getConfig(path='config.txt') {
+function getConfig(configPath='config.txt') {
   let config = JSON.parse(JSON.stringify(defaultConfig));
-  try {
-    const data = fs.readFileSync(path, 'utf8');
-    const lines = data.split('\n');
-    lines.forEach(line => {
-      line = line.trim();
-      if (line === '' || line.startsWith('#')) return;
-      const parts = line.split('=');
-      const key = parts[0].trim();
-      const values = parts[1].trim();
-      if (!config.hasOwnProperty(key)) 
-        console.error(`Unknown config key: ${key}`);
-      else if (values.length === 0) 
-        console.error(`No values for config key: ${key}`);
-      else
-        config[key] = values;
-    });
-    console.log('config.txt loaded:');
-    console.log(config);
-    return config;
-  } catch (err) {
-    console.error('Failed to read `' + path + '` :' + err.message);
-    return defaultConfig;
-  }
+  fs.access(configPath, fs.constants.F_OK, (err) => {
+    if (err) {
+      console.error(`The file "${configPath}" does not exist.`);
+      let data = '';
+      Object.keys(defaultConfig).forEach((key) => {
+        data += `${key} = ${defaultConfig[key]}\n`;
+      });
+      fs.writeFile(configPath, data, (err) => {
+        if (err) console.error(`Can not create file "${configPath}"`, err);
+        else console.log(`"${configPath}" created:`);
+      });
+      return defaultConfig;
+    } else {
+      const data = fs.readFileSync(configPath, 'utf8');
+      const lines = data.split('\n');
+      lines.forEach(line => {
+        line = line.trim();
+        if (line === '' || line.startsWith('#')) return;
+        const parts = line.split('=');
+        const key = parts[0].trim();
+        const values = parts[1].trim();
+        if (!config.hasOwnProperty(key)) 
+          console.error(`Unknown config key: ${key}`);
+        else if (values.length === 0) 
+          console.error(`No values for config key: ${key}`);
+        else
+          config[key] = values;
+      });
+      console.log(`"${configPath}" loaded:`);
+    }
+  });
+  console.log(config);
+  return config;
 }
 
 function saveLogs(data, dir='logs'){
@@ -268,7 +278,7 @@ class Bot {
         console.error('get cookie error');
         process.exit(0);
       }
-      console.log(this.name_tc);
+      
       let form = {
         'name' : this.name_tc,
         'login' : 'ENTER',
@@ -683,8 +693,8 @@ function start(cb=()=>drrr.print("/mehi")){
       console.log('saved cookies loaded');
       drrr.join(config.roomID, cb);
   }else {
+      console.log('login...');
       drrr.login(() => {
-          console.log('login...');
           drrr.save();
           console.log('cookies saved');
           drrr.join(config.roomID, cb);
